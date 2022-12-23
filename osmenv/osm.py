@@ -57,7 +57,7 @@ class OSMNetworkHandler(osmium.SimpleHandler):
 if __name__ == '__main__':
 
     osm = OSMNetworkHandler()
-    osm.apply_file('data/network.osm.pbf', locations=True)
+    osm.apply_file('../data/network.osm.pbf', locations=True)
     ways, links = osm.generate_network()
 
     print(ways)

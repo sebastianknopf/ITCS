@@ -1,5 +1,6 @@
 import gym
 import osmenv
+import data
 
 environment = gym.make('OSMEnvironment', osm_data_file='data/network.osm.pbf')
 
@@ -15,3 +16,5 @@ state, _ = environment.reset(seed=15)
 print(environment.observation_space.sample())
 print(state['vehicle_position'])
 print(list(state['network_state']))
+
+print(data.trips[0])

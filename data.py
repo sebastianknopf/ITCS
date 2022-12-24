@@ -5,17 +5,19 @@ def _load_trip_ways(data_file):
         return ways
 
 
-trip743h = {
+_trip743h = {
     'id': '743-H',
     'ways': _load_trip_ways('data/trip743h.txt')
 }
 
-trip744h = {
+_trip744h = {
     'id': '744-H',
     'ways': _load_trip_ways('data/trip744h.txt')
 }
 
-trip2h = {
+_trip2h = {
     'id': '2-H',
     'ways': _load_trip_ways('data/trip2h.txt')
 }
+
+trips = [_trip2h, _trip743h, _trip744h]

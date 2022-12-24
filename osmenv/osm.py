@@ -31,6 +31,8 @@ class OSMNetworkHandler(osmium.SimpleHandler):
 
     def generate_network(self):
 
+        self.ways = dict(sorted(self.ways.items()))
+
         key_list = list()
         for n in self.nodes.keys():
             if len(self.nodes.get(n)) < 2:
@@ -51,7 +53,7 @@ class OSMNetworkHandler(osmium.SimpleHandler):
                 else:
                     links[w] = remainder
 
-        return self.ways, links
+        return self.ways, dict(sorted(links.items()))
 
 
 if __name__ == '__main__':

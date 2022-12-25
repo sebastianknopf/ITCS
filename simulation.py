@@ -1,7 +1,9 @@
+
+
 def _load_trip_ways(data_file):
     # read file line by line and pass ways as ordered in file
     with open(data_file) as file:
-        ways = [line.rstrip() for line in file]
+        ways = [int(line.rstrip()) for line in file]
         return ways
 
 

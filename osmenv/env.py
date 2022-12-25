@@ -52,9 +52,9 @@ class OSMEnvironment(gym.Env):
             'network_state': gym.spaces.MultiBinary(self._size)
         })
 
-    def set_trip(self, trip: TripStruct, position = 0):
+    def set_trip(self, trip: TripStruct, position=0):
         assert trip is None or isinstance(trip, TripStruct), \
-            'parameter trip must represent a valid osmenv.trip.Trip object'
+            'parameter trip must represent a valid osmenv.trip.TripStruct object'
 
         self._trip = trip
 
@@ -107,6 +107,9 @@ class OSMEnvironment(gym.Env):
     def get_deviation_required(self):
         return len(self._start_states) > 0
 
+    def get_state(self):
+        return self._get_observation(), self._get_info()
+
     def step(self, action):
 
         # save last state to determine reward after applying action
@@ -134,6 +137,9 @@ class OSMEnvironment(gym.Env):
         # reset agents location and ensure that agents location is not a terminal location
         self._vehicle_position = self._i2w(self.np_random.randint(0, self.action_space.n))
 
+        # reset network state
+        self._network_state.fill(1)
+
         # re-create status context
         self._update_state_context()
 
@@ -158,10 +164,16 @@ class OSMEnvironment(gym.Env):
         }
 
     def _i2w(self, action):
-        return list(self._ways.keys())[action]
+        lst = list(self._ways.keys())
+        value = lst[action]
+
+        return value
 
     def _w2i(self, way):
-        return list(self._ways.keys()).index(way)
+        lst = list(self._ways.keys())
+        index = lst.index(way)
+
+        return index
 
     def _update_state_context(self):
 
@@ -188,7 +200,7 @@ class OSMEnvironment(gym.Env):
                         last = self._trip.ways.index(w)
 
             # check whether there's a blocked way on the trip
-            if first == last == 0:
+            if first != 0 and last != 0:
 
                 # reset lists, every state is a deviation state by default now
                 self._start_states = list()
@@ -198,18 +210,19 @@ class OSMEnvironment(gym.Env):
 
                 # iterate over all ways and determine start-, terminal- and deviation states
                 for w in self._trip.ways:
-                    if self._trip.ways.index(w) < pos:
-                        pass # do nothing here... ways are only interesting from the current position
-                    elif pos <= self._trip.ways.index(w) < first:
-                        self._deviation_states.remove(w)
+                    index = self._trip.ways.index(w)
+                    if index < pos:
+                        pass  # do nothing here... ways are only interesting from the current position
+                    elif pos <= index < first:
+                        if w in self._deviation_states: self._deviation_states.remove(w)
                         self._start_states.append(w)
-                    elif first < self._trip.ways.index(w) < last:
-                        pass # simply do nothing here, the way is marked as deviation yet
-                    elif self._trip.ways.index(w) > last:
-                        self._deviation_states.remove(w)
+                    elif first < index < last:
+                        pass  # simply do nothing here, the way is marked as deviation yet
+                    elif index > last:
+                        if w in self._deviation_states: self._deviation_states.remove(w)
                         self._terminal_states.append(w)
                     else:
-                        self._deviation_states.remove(w)
+                        if w in self._deviation_states: self._deviation_states.remove(w)
                         self._unreachable_states.append(w)
 
     def _get_reward(self, last_state, current_state):

@@ -23,6 +23,7 @@ class OSMEnvironment(gym.Env):
         # _network_state represents usability of each way in the network, default value is 1 for
         # every way being usable initially
         self._vehicle_position = self.np_random.choice(list(self._ways.keys()))
+        self._last_vehicle_position = self._vehicle_position
         self._network_state = np.empty(self._size)
         self._network_state.fill(1)
 
@@ -34,6 +35,10 @@ class OSMEnvironment(gym.Env):
         self._terminal_states = list()
         self._deviation_states = list()
         self._unreachable_states = list()
+        self._visited_path = list()
+
+        # TODO: remove this, if other way found
+        self._deviation_states_preferred = [170, 3604, 181, 2838, 2845, 4553, 4552, 2840, 3446, 4110, 2360, 4727, 2949, 4728, 3798, 4731]
 
         # build status context first time
         self._update_state_context()
@@ -102,7 +107,22 @@ class OSMEnvironment(gym.Env):
             actions = self._links[way]
 
         # return only actions which are not part of unreachable state list
-        return [self._w2i(a) for a in actions if a not in self._unreachable_states]
+        available_actions = [a for a in actions if a not in self._unreachable_states]
+
+        # return only actions which are not part of the last path, except a circle is reached
+        if set(available_actions) <= set(self._visited_path):
+            index = 0
+            for i, v in enumerate(self._visited_path):
+                if v in available_actions:
+                    index = i
+                    break
+
+            self._visited_path = self._visited_path[index + 1:len(self._visited_path) - 1]
+
+        available_actions = [a for a in available_actions if a not in self._visited_path]
+
+        # return action indices instead of way numbers
+        return [self._w2i(a) for a in available_actions]
 
     def get_deviation_required(self):
         return len(self._start_states) > 0
@@ -117,6 +137,8 @@ class OSMEnvironment(gym.Env):
         last_state = self._vehicle_position
         self._vehicle_position = self._i2w(action)
 
+        self._visited_path.append(self._vehicle_position)
+
         # check whether a terminal state is reached
         terminated = False
         if self._vehicle_position in self._terminal_states:
@@ -129,7 +151,7 @@ class OSMEnvironment(gym.Env):
         observation = self._get_observation()
         info = self._get_info()
 
-        return observation, reward, terminated, False, info
+        return observation, reward, terminated, info
 
     def reset(self, **kwargs):
         super().reset(**kwargs)
@@ -157,17 +179,20 @@ class OSMEnvironment(gym.Env):
     def _get_info(self):
         return {
             'trip': self._trip,
+            'vehicle_position_index': self._w2i(self._vehicle_position),
+            'vehicle_position_way': self._vehicle_position,
             'start_states': self._start_states,
             'terminal_states': self._terminal_states,
             'deviation_states': self._deviation_states,
-            'unreachable_states': self._unreachable_states
+            'unreachable_states': self._unreachable_states,
+            'visited_path': self._visited_path
         }
 
-    def _i2w(self, action):
+    def _i2w(self, index):
         lst = list(self._ways.keys())
-        value = lst[action]
+        way = lst[index]
 
-        return value
+        return way
 
     def _w2i(self, way):
         lst = list(self._ways.keys())
@@ -181,6 +206,8 @@ class OSMEnvironment(gym.Env):
         self._terminal_states = list(self._ways)
         self._deviation_states = list()
         self._unreachable_states = list()
+
+        self._visited_path = [self._vehicle_position]
 
         # only if there's a valid trip object, a start state could be reached
         if self._trip is not None:
@@ -208,6 +235,8 @@ class OSMEnvironment(gym.Env):
                 self._deviation_states = list(self._ways)
                 self._unreachable_states = list()
 
+                self._visited_path = [self._vehicle_position]
+
                 # iterate over all ways and determine start-, terminal- and deviation states
                 for w in self._trip.ways:
                     index = self._trip.ways.index(w)
@@ -233,5 +262,9 @@ class OSMEnvironment(gym.Env):
         elif last_state in self._deviation_states and current_state in self._deviation_states:
             # TODO: add check and reward function for near stops here ...
             return 0
+        elif last_state in self._deviation_states and current_state in self._start_states:
+            return -1
         elif last_state in self._deviation_states and current_state in self._terminal_states:
             return 1
+        else:
+            return 0 # return zero in all other cases

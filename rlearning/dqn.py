@@ -1,6 +1,8 @@
 import random
 import logging
 import time
+import csv
+import os
 
 import numpy as np
 
@@ -10,10 +12,31 @@ import common
 
 
 # DQN implementation
-def dqn(environment, model, df=0.999, e=0.5, e_df=0.95, num_episodes=500):
+def dqn(environment, model, output_file_name=None, df=0.95, e=0.5, e_df=0.99, num_episodes=500):
+
+    # write comparable output file, if file name is present
+    output_writer = None
+    if output_file_name is not None:
+
+        # set custom new line char for windows
+        if os.name == 'nt':
+            nl = ''
+        else:
+            nl = '\n'
+
+        output_file = open(output_file_name, 'w', newline=nl)
+        output_writer = csv.writer(output_file, delimiter=';', quotechar='"')
+
+        output_writer.writerow(['episode',
+                                'episode_duration',
+                                'episode_steps',
+                                'episode_reward',
+                                'episode_avg_mse',
+                                'episode_epsilon',
+                                'episode_path'
+                                ])
 
     # DQN monitoring and config variables
-    cnt_episodes = 1
     min_blocked_ways = 1
     max_blocked_ways = 1
     min_start_distance = 10
@@ -22,8 +45,11 @@ def dqn(environment, model, df=0.999, e=0.5, e_df=0.95, num_episodes=500):
     for episode in range(num_episodes):
 
         # episode monitoring variables
-        cnt_steps = 0
-        start_time = time.time()
+        episode_steps = 0
+        episode_reward = 0
+        episode_mse = list()
+        episode_path = list()
+        episode_start_time = time.time()
 
         # count down epsilon, reset environment and construct a random state
         e *= e_df
@@ -67,7 +93,7 @@ def dqn(environment, model, df=0.999, e=0.5, e_df=0.95, num_episodes=500):
         environment.set_trip(trip, position)
 
         logging.info('starting episode #%s with trip %s, start position %s, blocked way(s) %s',
-                     str(cnt_episodes),
+                     str(episode),
                      str(trip.id),
                      str(position),
                      str(blocked_ways)
@@ -105,8 +131,6 @@ def dqn(environment, model, df=0.999, e=0.5, e_df=0.95, num_episodes=500):
 
             available_actions = environment.get_available_actions()
 
-            #logging.info(str(position) + ' > ' + str(info['vehicle_position_way']) + ': ' + str(reward))
-
             # build maximum reward by observing all available actions in next state
             target = reward + df * common.max_restricted(
                 model.predict(next_state, verbose=0)[0],
@@ -117,7 +141,7 @@ def dqn(environment, model, df=0.999, e=0.5, e_df=0.95, num_episodes=500):
             target_vector = state_prediction[0]
             target_vector[action] = target
 
-            model.fit(
+            hist = model.fit(
                 state,
                 target_vector.reshape(-1, environment.action_space.n),
                 epochs=1,
@@ -125,18 +149,36 @@ def dqn(environment, model, df=0.999, e=0.5, e_df=0.95, num_episodes=500):
             )
 
             state = next_state
-            position = info['vehicle_position_way']
 
-            cnt_steps += 1
+            episode_steps += 1
+            episode_reward += reward
+            episode_mse.append(hist.history['mse'][0])
+            episode_path.append(info['vehicle_position_way'])
 
         # log episode monitoring
-        end_time = time.time()
+        episode_end_time = time.time()
 
-        logging.info('finished episode #%s after %s steps in %s with reward of %s',
-                     str(cnt_episodes),
-                     str(cnt_steps),
-                     '{:5.3f}s'.format(end_time - start_time),
-                     str(reward)
+        # write result, if present
+        if output_writer is not None:
+            output_writer.writerow([
+                str(episode),
+                str('{0:5.2f}'.format(episode_end_time - episode_start_time)),
+                str(episode_steps),
+                str(episode_reward),
+                str(np.average(episode_mse)),
+                str('{0:5.10f}'.format(e)),
+                str(episode_path)
+            ])
+
+        logging.info('path %s', str(episode_path))
+        logging.info('finished episode #%s after %s steps in %s with reward of %s, average mse of %s',
+                     str(episode),
+                     str(episode_steps),
+                     '{:5.3f}s'.format(episode_end_time - episode_start_time),
+                     str(episode_reward),
+                     str(np.average(episode_mse))
                      )
 
-        cnt_episodes += 1
+    # close file writer if present
+    if output_writer is not None:
+        output_file.close()

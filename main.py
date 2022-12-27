@@ -8,7 +8,7 @@ from keras.layers import Dense
 
 from rlearning.dqn import dqn
 
-# set log level
+# set basic configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s',
@@ -31,10 +31,10 @@ model.add(Dense(env_hidden_layer_size, name='HiddenLayer2'))
 model.add(LeakyReLU(alpha=0.25))
 model.add(Dense(env_output_layer_size, activation='linear', name='OutputLayer'))
 
-model.compile(loss='mse', optimizer='adam', metrics=['mae'])
+model.compile(loss='mse', optimizer='adam', metrics=['mse'])
 
 # run training DQN
 dqn(
-    environment, model,
-    num_episodes=20
+    environment, model, output_file_name='output/dqn_result.csv',
+    num_episodes=1000
 )

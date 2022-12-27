@@ -8,6 +8,8 @@ import numpy as np
 
 class OSMEnvironment(gym.Env):
 
+    metadata = {'render_modes': ['map'], 'render_fps': 5}
+
     def __init__(self, osm_data_file):
         super(OSMEnvironment, self).__init__()
 
@@ -37,8 +39,8 @@ class OSMEnvironment(gym.Env):
         self._unreachable_states = list()
         self._visited_path = list()
 
-        # TODO: remove this, if other way found
-        self._deviation_states_preferred = [170, 3604, 181, 2838, 2845, 4553, 4552, 2840, 3446, 4110, 2360, 4727, 2949, 4728, 3798, 4731]
+        # simulation purpose, deviation_states_preferred contains ways with possible replacement stops
+        self._deviation_states_preferred = [4552, 2360]
 
         # build status context first time
         self._update_state_context()
@@ -260,8 +262,12 @@ class OSMEnvironment(gym.Env):
         elif last_state in self._start_states and current_state in self._deviation_states:
             return -1
         elif last_state in self._deviation_states and current_state in self._deviation_states:
-            # TODO: add check and reward function for near stops here ...
-            return 0
+            # simulation purpose
+            # if deviation_states preferred contains current position, give reward of 1
+            if current_state in self._deviation_states_preferred:
+                return 1
+            else:
+                return -1
         elif last_state in self._deviation_states and current_state in self._start_states:
             return -1
         elif last_state in self._deviation_states and current_state in self._terminal_states:

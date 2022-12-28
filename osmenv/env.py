@@ -258,19 +258,22 @@ class OSMEnvironment(gym.Env):
 
     def _get_reward(self, last_state, current_state):
         if last_state in self._start_states and current_state in self._start_states:
-            return 1
+            reward = 10
         elif last_state in self._start_states and current_state in self._deviation_states:
-            return -1
+            reward = -1
         elif last_state in self._deviation_states and current_state in self._deviation_states:
             # simulation purpose
             # if deviation_states preferred contains current position, give reward of 1
             if current_state in self._deviation_states_preferred:
-                return 1
+                reward = 10
             else:
-                return -1
+                reward = -1
         elif last_state in self._deviation_states and current_state in self._start_states:
-            return -1
+            reward = -1
         elif last_state in self._deviation_states and current_state in self._terminal_states:
-            return 1
+            reward = 100
         else:
-            return 0 # return zero in all other cases
+            reward = 0 # return zero in all other cases
+
+        # clip reward to a positive result
+        return max(0, min(10000, reward))

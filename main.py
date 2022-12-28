@@ -36,5 +36,5 @@ model.compile(loss='mse', optimizer='adam', metrics=['mse'])
 # run training DQN
 dqn(
     environment, model, output_file_name='output/dqn_result.csv',
-    num_episodes=1000
+    num_episodes=100
 )

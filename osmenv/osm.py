@@ -26,7 +26,7 @@ class OSMNetworkHandler(osmium.SimpleHandler):
 
         self._wkb_factory = osmium.geom.WKBFactory()
 
-        self.nodes = dict()
+        self._nodes = dict()
 
     def way(self, w):
 
@@ -38,38 +38,38 @@ class OSMNetworkHandler(osmium.SimpleHandler):
             for n in w.nodes:
 
                 node_ref = int(n.ref)
-                if node_ref in self.nodes.keys():
-                    self.nodes.get(node_ref).ways.append(way_id)
+                if node_ref in self._nodes.keys():
+                    self._nodes.get(node_ref).ways.append(way_id)
                 else:
-                    self.nodes[node_ref] = Node(node_ref, n.lat, n.lon, [])
-                    self.nodes.get(node_ref).ways.append(way_id)
+                    self._nodes[node_ref] = Node(node_ref, n.lat, n.lon, [])
+                    self._nodes.get(node_ref).ways.append(way_id)
 
     def generate_nodes(self):
 
         # remove all nodes NOT representing a INTERSECTION between AT LEAST 2 ways
         key_list = list()
-        for n in self.nodes.keys():
-            if len(self.nodes.get(n).ways) < 2:
+        for n in self._nodes.keys():
+            if len(self._nodes.get(n).ways) < 2:
                 key_list.append(n)
 
         for dk in key_list:
-            self.nodes.pop(dk, None)
+            self._nodes.pop(dk, None)
 
         # iterate over all intersection nodes to find links between other nodes
         data = dict()
-        for node_id in self.nodes.keys():
+        for node_id in self._nodes.keys():
 
             # get reference to current node
-            current_node_obj = self.nodes.get(node_id)
+            current_node_obj = self._nodes.get(node_id)
 
             # add key entry for this node
             links = list()
 
             # iterate all ways connected to this node to find other nodes
-            for way_id in self.nodes.get(node_id).ways:
+            for way_id in self._nodes.get(node_id).ways:
 
                 node_ids = [k for k, n in
-                            self.nodes.items()
+                            self._nodes.items()
                             if way_id in n.ways
                             and n.id != node_id]
 
@@ -77,7 +77,7 @@ class OSMNetworkHandler(osmium.SimpleHandler):
 
                     for destination_node_id in node_ids:
 
-                        destination_node_obj = self.nodes.get(destination_node_id)
+                        destination_node_obj = self._nodes.get(destination_node_id)
                         direction = _direction(
                             current_node_obj.lat,
                             current_node_obj.lon,

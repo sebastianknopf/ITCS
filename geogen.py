@@ -28,7 +28,7 @@ _router = pyroutelib3.Router(transport=_bus_mode, localfile='data/network.osm.pb
 
 
 # calculate compass direction of two lat lon coordinates
-def _direction(lat1, lon1, lat2, lon2):
+def _bearing(lat1, lon1, lat2, lon2):
     delta_lon = lon2 - lon1
     y = math.sin(delta_lon) * math.cos(lat2)
     x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(delta_lon)
@@ -40,7 +40,7 @@ def _direction(lat1, lon1, lat2, lon2):
     compass_brackets = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
     compass_lookup = round(bearing / 45)
 
-    return compass_brackets[compass_lookup]
+    return bearing
 
 
 # calculate a node sequence along a list of GPS coordinates
@@ -118,7 +118,7 @@ def create_routing_network_file(file_name, router):
 
             routing_network[n]['links'].append({
                 'destination': d,
-                'direction': _direction(current_node[0], current_node[1], destination_node[0], destination_node[1])
+                'direction': _bearing(current_node[0], current_node[1], destination_node[0], destination_node[1])
             })
 
     with open(file_name, 'w') as f:
@@ -188,5 +188,5 @@ if __name__ == '__main__':
 
             print('link {0} > {1}'.format(
                 d,
-                _direction(current_node[0], current_node[1], destination_node[0], destination_node[1])
+                _bearing(current_node[0], current_node[1], destination_node[0], destination_node[1])
             ))

@@ -214,3 +214,12 @@ if __name__ == '__main__':
 
     create_geojson_file('output/land743_dev2.geojson', coord)
     create_sequence_file('output/land743_dev2.json', sequence, length)
+
+    # create points of osm network file
+    geojson = GeoJsonFile()
+
+    for n, c in router._router.rnodes.items():
+        geojson.add_point(c, props={'id': n})
+
+    geojson.save('output/osmpoints.geojson')
+

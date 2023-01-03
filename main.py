@@ -8,29 +8,58 @@ from osmenv.qlearning import QLearning
 parser = ArgumentParser()
 parser.add_argument('-q', '--q-learning', dest='run_q_learning', action='store_true')
 parser.add_argument('-s', '--sarsa', dest='run_sarsa', action='store_true')
+parser.add_argument('-f', '--full', dest='env_full', action='store_true')
 
 args = parser.parse_args()
 
 # load simulation environment
-env = gym.make('Environment', osm_file='data/network.osm.pbf', route_files=[
-    'data/city2.json',
-    'data/land743.json',
-    'data/land744.json'
-], deviation_files=[
-    'data/city2_dev1.json',
-    'data/city2_dev2.json',
-    'data/city2_dev3.json',
-    'data/city2_dev4.json',
-    'data/land743_dev1.json',
-    'data/land743_dev2.json',
-    'data/land744_dev1.json',
-    'data/land744_dev2.json',
-    'data/land744_dev3.json',
-], scenarios=[
-    10012,
-    1772,
-    23937
-])
+if args.env_full:
+
+    env = gym.make('Environment', osm_file='data/network.osm.pbf', route_files=[
+        'data/city2.json',
+        'data/land743.json',
+        'data/land744.json',
+        'data/village715.json'
+    ], deviation_files=[
+        'data/city2_dev1.json',
+        'data/city2_dev2.json',
+        'data/city2_dev3.json',
+        'data/city2_dev4.json',
+        'data/land743_dev1.json',
+        'data/land743_dev2.json',
+        'data/land744_dev1.json',
+        'data/land744_dev2.json',
+        'data/land744_dev3.json',
+        'data/village715_dev1.json',
+        'data/village715_dev2.json',
+        'data/village715_dev3.json',
+        'data/village715_dev4.json'
+    ], scenarios=[
+        1772,
+        23937,
+        10292
+    ])
+else:
+
+    env = gym.make('Environment', osm_file='data/network.osm.pbf', route_files=[
+        'data/city2.json',
+        'data/land743.json',
+        'data/land744.json'
+    ], deviation_files=[
+        'data/city2_dev1.json',
+        'data/city2_dev2.json',
+        'data/city2_dev3.json',
+        'data/city2_dev4.json',
+        'data/land743_dev1.json',
+        'data/land743_dev2.json',
+        'data/land744_dev1.json',
+        'data/land744_dev2.json',
+        'data/land744_dev3.json'
+    ], scenarios=[
+        1772,
+        23937,
+        10292
+    ])
 
 env.set_weights({
     'length': 2,

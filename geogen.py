@@ -215,6 +215,76 @@ if __name__ == '__main__':
     create_geojson_file('output/land743_dev2.geojson', coord)
     create_sequence_file('output/land743_dev2.json', sequence, length)
 
+    print()
+
+    # generate route for Pforzheim > Neuenbürg
+    print('generate regular route for Pforzheim > Neuenbürg')
+    _, sequence, coord, length = router.find_route(
+        (48.8891678, 8.6660846),
+        (48.859522, 8.609634),
+        via_list=[
+            (48.8770980, 8.6447771),
+            (48.8741511, 8.6419259),
+            (48.8729455, 8.6428635),
+            (48.8716730, 8.6427678),
+            (48.8701613, 8.6357738),
+            (48.8702570, 8.6265982)
+        ]
+    )
+
+    create_geojson_file('output/village715.geojson', coord)
+    create_sequence_file('output/village715.json', sequence, length)
+
+    print('generate deviation routes for Pforzheim > Neuenbürg')
+    _, sequence, coord, length = router.find_route(
+        (48.8795760, 8.6489128),
+        (48.87120777, 8.64003084),
+        via_list=[
+            (48.8733121, 8.6440099),
+            (48.8704752, 8.6416179)
+        ]
+    )
+
+    create_geojson_file('output/village715_dev1.geojson', coord)
+    create_sequence_file('output/village715_dev1.json', sequence, length)
+
+    _, sequence, coord, length = router.find_route(
+        (48.8795760, 8.6489128),
+        (48.8705015, 8.6257640),
+        via_list=[
+            (48.8733121, 8.6440099),
+            (48.8704752, 8.6416179),
+            (48.873179, 8.636156),
+            (48.8753991, 8.6294823)
+        ]
+    )
+
+    create_geojson_file('output/village715_dev2.geojson', coord)
+    create_sequence_file('output/village715_dev2.json', sequence, length)
+
+    _, sequence, coord, length = router.find_route(
+        (48.8705661, 8.6364884),
+        (48.8705015, 8.6257640),
+        via_list=[
+            (48.873179, 8.636156),
+            (48.8753991, 8.6294823)
+        ]
+    )
+
+    create_geojson_file('output/village715_dev3.geojson', coord)
+    create_sequence_file('output/village715_dev3.json', sequence, length)
+
+    _, sequence, coord, length = router.find_route(
+        (48.8877129, 8.6643343),
+        (48.8705015, 8.6257640),
+        via_list=[
+            (48.884369, 8.640431)
+        ]
+    )
+
+    create_geojson_file('output/village715_dev4.geojson', coord)
+    create_sequence_file('output/village715_dev4.json', sequence, length)
+
     # create points of osm network file
     geojson = GeoJsonFile()
 

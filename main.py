@@ -17,7 +17,6 @@ args = parser.parse_args()
 
 # load simulation environment
 if args.env_full:
-
     env = gym.make('Environment', osm_file='data/network.osm.pbf', route_files=[
         'data/city2.json',
         'data/land743.json',
@@ -42,8 +41,8 @@ if args.env_full:
         23937,
         10292
     ])
-else:
 
+else:
     env = gym.make('Environment', osm_file='data/network.osm.pbf', route_files=[
         'data/city2.json',
         'data/land743.json',
@@ -69,36 +68,42 @@ env.set_weights({
     'stops': 4
 })
 
+# configure global hyper parameters
+episodes = 5000
+
+g = 0.95
+e = 0.5
+
 # run learning algorithms according to options
 if args.run_q_learning:
 
     print('running q-learning ...')
 
-    q_learning = QLearning(env)
-    c = q_learning.fit(gamma=0.95, epsilon=0.5, filename='output/q-learning.xlsx')
+    q_learning = QLearning(env, episodes)
+    c = q_learning.fit(gamma=g, epsilon=e, filename='output/q-learning.xlsx')
     q_learning.save('output/q-learning.json')
 
-    print('found convergence after {0} episodes'.format(c))
+    print('finished after {0} episodes'.format(c))
     print()
 
 if args.run_sarsa:
 
     print('running sarsa ...')
 
-    sarsa = Sarsa(env)
-    c = sarsa.fit(gamma=0.95, epsilon=0.5, epsilon_decay=0.9, filename='output/sarsa.xlsx')
+    sarsa = Sarsa(env, episodes)
+    c = sarsa.fit(gamma=g, epsilon=e, filename='output/sarsa.xlsx')
     sarsa.save('output/sarsa.json')
 
-    print('found convergence after {0} episodes'.format(c))
+    print('finished after {0} episodes'.format(c))
     print()
 
 if args.run_esarsa:
     print('running expected sarsa ...')
 
-    expected_sarsa = ExpectedSarsa(env)
-    c = expected_sarsa.fit(gamma=0.95, epsilon=0.5, epsilon_decay=0.9, filename='output/expected-sarsa.xlsx')
+    expected_sarsa = ExpectedSarsa(env, episodes)
+    c = expected_sarsa.fit(gamma=g, epsilon=e, filename='output/expected-sarsa.xlsx')
     expected_sarsa.save('output/expected-sarsa.json')
 
-    print('found convergence after {0} episodes'.format(c))
+    print('finished after {0} episodes'.format(c))
     print()
 

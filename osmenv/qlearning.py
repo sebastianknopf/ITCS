@@ -1,29 +1,19 @@
-import ast
 import time
-import json
 
 import numpy as np
-import pandas as pd
+
+from osmenv.algorithm import TemporalDifferenceAlgorithm
 
 
-class QLearning:
+class QLearning(TemporalDifferenceAlgorithm):
 
-    def __init__(self, environment):
-
-        self._env = environment
-
-        # init q table
-        self._q_table = dict()
-
-        for r in range(self._env.observation_space[0].n):
-            for d in range(self._env.observation_space[1].n):
-                for s in range(self._env.observation_space[2].n):
-                    self._q_table[(r, d, s)] = np.zeros(self._env.action_space.n)
+    def __init__(self, environment, episodes=0):
+        super(QLearning, self).__init__(environment, episodes)
 
     def fit(self, gamma, epsilon, epsilon_decay=0.999, alpha=0.8, filename=None):
 
         # init process monitoring variables
-        convergence = False  # convergence flag
+        terminate = False  # terminate flag
 
         episode_steps = list()
         episode_rewards = list()
@@ -33,7 +23,7 @@ class QLearning:
         episode_count = 0
 
         # q-learning implementation
-        while convergence is False:
+        while terminate is False:
 
             # resent environment and decay epsilon
             state, _ = self._env.reset()
@@ -82,57 +72,20 @@ class QLearning:
             episode_epsilons.append(epsilon)
 
             if len(episode_deltas) > 200:
-                max_delta = np.max(episode_deltas[-200:])
-                convergence = True if max_delta < 0.0001 else False
+                if self._num_episodes > 0:
+                    terminate = True if episode_count >= self._num_episodes else False
+                else:
+                    max_delta = np.max(episode_deltas[-200:])
+                    terminate = True if max_delta < 0.0001 else False
 
         # create monitoring file name if required
         if filename is not None:
-
-            df = pd.DataFrame({
-                'episode': [e for e in range(1, episode_count + 1)],
-                'steps': episode_steps,
-                'reward': episode_rewards,
-                'delta': episode_deltas,
-                'duration': episode_durations,
-                'epsilon': episode_epsilons
-            })
-
-            writer = pd.ExcelWriter(filename, engine='xlsxwriter')
-            df.to_excel(writer, sheet_name='Q-Learning', index=False)
-
-            writer.close()
+            self._create_monitoring_file(filename, 'Q-Learning',
+                                         episode_count,
+                                         episode_steps,
+                                         episode_rewards,
+                                         episode_deltas,
+                                         episode_durations,
+                                         episode_epsilons)
 
         return episode_count
-
-    def predict(self, state):
-
-        if len(state) == 2:
-            state = state[0], 0, state[1]
-
-        if state in self._q_table.keys():
-            return np.argmax(self._q_table[state])
-        else:
-            return -1
-
-    def load(self, filename):
-
-        # read JSON data
-        with open(filename, 'r') as f:
-            q_data = json.load(f)
-
-            f.close()
-
-        # remap q data to q-table
-        q_table = {ast.literal_eval(k): np.array(v) for k, v in q_data.items()}
-        self._q_table = q_table
-
-    def save(self, filename):
-
-        # re-map q-table data to JSONable format
-        q_data = {str(k): list(v) for k, v in self._q_table.items()}
-
-        # write JSON file
-        with open(filename, 'w') as f:
-            json.dump(q_data, f)
-
-            f.close()

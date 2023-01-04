@@ -2,6 +2,7 @@ import gym
 
 from argparse import ArgumentParser
 from osmenv.qlearning import QLearning
+from osmenv.sarsa import Sarsa
 
 
 # add options parser
@@ -66,7 +67,7 @@ env.set_weights({
     'stops': 4
 })
 
-# run q learning algorithms according to options
+# run learning algorithms according to options
 if args.run_q_learning:
 
     print('running q-learning ...')
@@ -79,5 +80,13 @@ if args.run_q_learning:
     print()
 
 if args.run_sarsa:
-    pass
+
+    print('running sarsa ...')
+
+    sarsa = Sarsa(env)
+    c = sarsa.fit(gamma=0.95, epsilon=0.8, filename='output/sarsa.xlsx')
+    sarsa.save('output/sarsa.json')
+
+    print('found convergence after {0} episodes'.format(c))
+    print()
 

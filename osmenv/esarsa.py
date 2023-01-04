@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-class Sarsa:
+class ExpectedSarsa:
 
     def __init__(self, environment):
 
@@ -57,12 +57,16 @@ class Sarsa:
 
                 # apply action in environment
                 next_state, reward, done, info = self._env.step(action)
-                next_action = self._strategy(next_state, epsilon)
 
                 # store q value and next q value for convergence check
+                action_probability = self._action_probability(state, epsilon)
+                next_actions = self._q_table[next_state]
+
+                expected_action_update = sum([a * b for a, b in zip(action_probability, next_actions)])
+
                 q_value = self._q_table[state][action]
                 next_q_value = q_value + reward + alpha * \
-                               (gamma * self._q_table[next_state][next_action] - self._q_table[state][action])
+                               (gamma * expected_action_update - self._q_table[state][action])
 
                 self._q_table[state][action] = next_q_value
                 state = next_state
@@ -145,3 +149,11 @@ class Sarsa:
             action = np.argmax(self._q_table[state])
 
         return action
+
+    def _action_probability(self, state, epsilon):
+
+        # calculate the probability for the actions of the state to be chosen
+        probability = [epsilon / self._env.action_space.n] * self._env.action_space.n
+        probability[np.argmax(self._q_table[state])] += 1.0 - epsilon
+
+        return probability

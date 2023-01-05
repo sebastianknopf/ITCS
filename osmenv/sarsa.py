@@ -81,7 +81,7 @@ class Sarsa(TemporalDifferenceAlgorithm):
 
         # create monitoring file name if required
         if filename is not None:
-            self._create_monitoring_file(filename, 'Q-Learning',
+            self._create_monitoring_file(filename, 'SARSA',
                                          episode_count,
                                          episode_steps,
                                          episode_rewards,

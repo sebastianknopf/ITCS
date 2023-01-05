@@ -93,9 +93,20 @@ class Sarsa(TemporalDifferenceAlgorithm):
 
     def _strategy(self, state, epsilon):
 
-        if np.random.random() < epsilon or np.sum(self._q_table[state]) == 0:
-            action = np.random.randint(0, self._env.action_space.n)
+        # n-epsilon-greedy strategy
+
+        n = 3
+        q_actions = self._q_table[state]
+
+        if np.random.random() < epsilon or np.sum(q_actions) == 0:
+
+            # consider only top N actions and those which are never visited yet ( => == 0)
+            top_actions = sorted(range(len(q_actions)), key=lambda sub: q_actions[sub])[-n:]
+            zero_actions = [i for i, a in enumerate(q_actions) if a == 0.0]
+            action_space = top_actions + zero_actions
+
+            action = action_space[np.random.randint(0, len(action_space))]
         else:
-            action = np.argmax(self._q_table[state])
+            action = np.argmax(q_actions)
 
         return action

@@ -1,5 +1,6 @@
 import json
 import ast
+import locale
 
 import numpy as np
 import pandas as pd
@@ -36,6 +37,9 @@ def generate_result_table(filename, inputs):
 
 def print_result_table(filename):
 
+    # locale settings
+    locale.setlocale(locale.LC_ALL, 'de')
+
     # read JSON data
     with open(filename, 'r') as f:
         q_data = json.load(f)
@@ -50,7 +54,7 @@ def print_result_table(filename):
 
                 print('route: {0}, scenario: {1}'.format(k[0], k[2]))
                 for action in v:
-                    print(action)
+                    print(locale.format('%.4f', action, 1))
 
                 print()
 

@@ -91,7 +91,7 @@ if args.run_sarsa:
     print('running sarsa ...')
 
     sarsa = Sarsa(env, episodes)
-    c = sarsa.fit(gamma=g, epsilon=e, filename='output/ne-sarsa.xlsx')
+    c = sarsa.fit(gamma=g, epsilon=0.025, filename='output/ne-sarsa.xlsx')
     sarsa.save('output/ne-sarsa.json')
 
     print('finished after {0} episodes'.format(c))
@@ -101,7 +101,7 @@ if args.run_esarsa:
     print('running expected sarsa ...')
 
     expected_sarsa = ExpectedSarsa(env, episodes)
-    c = expected_sarsa.fit(gamma=g, epsilon=e, filename='output/ne-expected-sarsa.xlsx')
+    c = expected_sarsa.fit(gamma=g, epsilon=0.025, filename='output/ne-expected-sarsa.xlsx')
     expected_sarsa.save('output/ne-expected-sarsa.json')
 
     print('finished after {0} episodes'.format(c))
